@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_vertical"
+    android:descendantFocusability="blocksDescendants">
+
+    <TextView
+        android:id="@+id/old_task_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/task_delete"
+        android:textSize="20sp" />s
+    <TextView
+        android:id="@+id/task_close_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Close time unknown"
+        android:layout_below="@+id/old_task_title"
+        android:layout_toLeftOf="@+id/task_delete"
+        android:layout_alignParentLeft="true"/>
+    <Button
+        android:id="@+id/task_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:text="Delete"
+        android:onClick="deleteTask"/>
+</RelativeLayout>

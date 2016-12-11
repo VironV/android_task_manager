@@ -1,60 +1,122 @@
 package com.example.viron_2.myapplication
 
-import android.R.id.input
+import android.app.AlarmManager
 import android.content.ContentValues
 import android.content.Context
-import android.content.DialogInterface
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.view.PagerAdapter
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.TextView
+import android.widget.*
+import com.example.viron_2.myapplication.db.TaskContract
+import com.example.viron_2.myapplication.db.TaskContract.TaskBase.*
 import com.example.viron_2.myapplication.db.TaskDbHelper
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
-import kotlinx.android.synthetic.main.item_todo.view.*
+import kotlinx.android.synthetic.main.item_task.*
+import kotlinx.android.synthetic.main.item_task.view.*
+import java.text.SimpleDateFormat
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
+
     private var TAG: String = "MainActivity";
     private var mHelper: TaskDbHelper = TaskDbHelper(this)
     private var mTaskListView: ListView? = null
-    private var mAdapter: ArrayAdapter<String>? = null
+    private var mAdapter: SimpleAdapter? = null
+
+    val TABLE: String = TaskContract.TaskBase.TABLE
+    val ID: String = "_id"
+    val TITLE: String = TaskContract.TaskBase.TITLE
+    val EXPIRES_AT: String = TaskContract.TaskBase.EXPIRES_AT
+    val CLOSED: String = TaskContract.TaskBase.CLOSED
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         //Log.d(TAG, "\nCreate\n")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        val db = mHelper.getReadableDatabase()
-        val cursor = db.query("tasks", arrayOf("_id","title"),null,null,null,null,null)
-        while (cursor.moveToNext()) {
-            val idx = cursor.getColumnIndex("title")
-            Log.d(TAG, "Task: " + cursor.getString(idx))
-        }
-        cursor.close()
-        db.close()
-
     }
 
     override fun onStart() {
         super.onStart()
-        mTaskListView =  activity_main.list_todo
+        mTaskListView =  list_tasks
         updateUI()
     }
 
+    fun closeTask(view: View) {
+        val parent = view.parent as View
+        val taskTextView = parent.task_title
+        val task = taskTextView.text as String
+        val db = mHelper.writableDatabase
+
+        val cursor = db.query(TABLE,arrayOf(ID,TITLE,EXPIRES_AT),
+                "title = " + "'" + task + "'",null,null,null,null)
+        cursor.moveToFirst()
+        val idx = cursor.getColumnIndex(ID)
+        val id = cursor.getInt(idx)
+        val date = getDateTime(Date())
+
+        val cv = ContentValues()
+        cv.put(TITLE,task)
+        cv.put(CLOSED,1)
+        cv.put(EXPIRES_AT,date)
+
+        db.update(TABLE,cv, ID + " = "+id,null)
+        db.close()
+        updateUI()
+    }
+
+
+    private fun updateUI() {
+        val data = ArrayList<Map<String,String>>()
+
+        val db = mHelper.readableDatabase
+        val cursor = db.query(TABLE,
+                arrayOf(ID,TITLE, CLOSED, EXPIRES_AT),null,null,null,null,null)
+        while (cursor.moveToNext()) {
+            val c_idx = cursor.getColumnIndex(CLOSED)
+            val cls = cursor.getInt(c_idx)!=0
+
+            if (!cls) {
+                val t_idx = cursor.getColumnIndex(TITLE)
+                val d_idx = cursor.getColumnIndex(EXPIRES_AT)
+
+                val m = HashMap<String,String>()
+                m.put(TITLE,cursor.getString(t_idx))
+                m.put(EXPIRES_AT,"Expire date: " + cursor.getString(d_idx))
+
+                data.add(m)
+            }
+        }
+
+        mAdapter=SimpleAdapter(this,
+                data,
+                R.layout.item_task,
+                arrayOf(TITLE,EXPIRES_AT),
+                intArrayOf(R.id.task_title,R.id.task_time))
+
+        mTaskListView?.adapter=mAdapter
+
+        cursor.close()
+        db.close()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        getMenuInflater().inflate(R.menu.main_menu,menu)
+        menuInflater.inflate(R.menu.main_menu,menu)
         return super.onCreateOptionsMenu(menu)
     }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
@@ -68,13 +130,19 @@ class MainActivity : AppCompatActivity() {
                         .setView(taskEditText)
                         .setPositiveButton("Add") {
                             dialog, which ->
-                            val task = taskEditText.getText().toString()
+                            val task = taskEditText.text.toString()
 
-                            val db: SQLiteDatabase = mHelper.getWritableDatabase()
+                            val db: SQLiteDatabase = mHelper.writableDatabase
+
+                            val cls : Int = 0
+                            val date : String = getDateTime(Date())
+
                             val values = ContentValues()
+                            values.put(TITLE,task)
+                            values.put(CLOSED,cls)
+                            values.put(EXPIRES_AT,date)
 
-                            values.put("title",task)
-                            db.insertWithOnConflict("tasks",
+                            db.insertWithOnConflict(TABLE,
                                     null,
                                     values,
                                     SQLiteDatabase.CONFLICT_REPLACE)
@@ -86,49 +154,17 @@ class MainActivity : AppCompatActivity() {
                 dialog.show()
                 return true
             }
+            R.id.action_archive -> {
+                val intent = Intent(this,ArchiveActivity::class.java)
+                startActivity(intent)
+                return true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
-
     }
 
-    public fun deleteTask(view: View) {
-        val parent = view.parent as View
-        val taskTextView = parent.task_title
-        val task = taskTextView.text as String
-        Log.d(TAG,"Task here is: " + task)
-        val db = mHelper.writableDatabase
-        db.delete("tasks","title = " + "'" + task + "'", null)
-        db.close()
-        updateUI()
-    }
-
-    private fun updateUI() {
-        Log.d(TAG, "Updating UI")
-        val taskList = ArrayList<String>()
-        val db = mHelper.readableDatabase
-        val cursor = db.query("tasks",
-                arrayOf("_id","title"),null,null,null,null,null)
-        while (cursor.moveToNext()) {
-           // Log.d(TAG, "Cursooooor!")
-            val idx = cursor.getColumnIndex("title")
-            taskList.add(cursor.getString(idx))
-        }
-
-        if (mAdapter == null) {
-            //Log.d(TAG, "Here we are")
-            mAdapter = ArrayAdapter<String>(this,
-                    R.layout.item_todo,
-                    R.id.task_title,
-                    taskList)
-            mTaskListView?.setAdapter(mAdapter)
-        } else {
-            //Log.d(TAG, "Nope, here")
-            mAdapter?.clear()
-            mAdapter?.addAll(taskList)
-            mAdapter?.notifyDataSetChanged()
-        }
-
-        cursor.close()
-        db.close()
+    private fun getDateTime(date: Date): String {
+        val dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        return dateFormat.format(date)
     }
 }

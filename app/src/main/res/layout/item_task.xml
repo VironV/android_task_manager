@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center_vertical">
+    android:layout_gravity="center_vertical"
+    android:descendantFocusability="blocksDescendants">
 
     <TextView
         android:id="@+id/task_title"
@@ -10,14 +11,22 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:text="Hello"
-        android:textSize="20sp" />
+        android:layout_toLeftOf="@+id/task_close"
+        android:textSize="20sp" />s
+    <TextView
+        android:id="@+id/task_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No expire time"
+        android:layout_below="@+id/task_title"
+        android:layout_toLeftOf="@+id/task_close"
+        android:layout_alignParentLeft="true"/>
     <Button
-        android:id="@+id/task_delete"
+        android:id="@+id/task_close"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:text="Done"
-        android:onClick="deleteTask"/>
+        android:onClick="closeTask"/>
 </RelativeLayout>
