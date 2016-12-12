@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     val TITLE: String = TaskContract.TaskBase.TITLE
     val EXPIRES_AT: String = TaskContract.TaskBase.EXPIRES_AT
     val CLOSED: String = TaskContract.TaskBase.CLOSED
+    val EXPIRED: String = TaskContract.TaskBase.EXPIRED
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,26 +55,17 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
+    override fun onResume() {
+        deleteExpiredTasks()
+        super.onResume()
+    }
+
     fun closeTask(view: View) {
         val parent = view.parent as View
         val taskTextView = parent.task_title
         val task = taskTextView.text as String
-        val db = mHelper.writableDatabase
 
-        val cursor = db.query(TABLE,arrayOf(ID,TITLE,EXPIRES_AT),
-                "title = " + "'" + task + "'",null,null,null,null)
-        cursor.moveToFirst()
-        val idx = cursor.getColumnIndex(ID)
-        val id = cursor.getInt(idx)
-        val date = getDateTime(Date())
-
-        val cv = ContentValues()
-        cv.put(TITLE,task)
-        cv.put(CLOSED,1)
-        cv.put(EXPIRES_AT,date)
-
-        db.update(TABLE,cv, ID + " = "+id,null)
-        db.close()
+        deleteDoneTask(task)
         updateUI()
     }
 
@@ -121,38 +113,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_add_task -> {
-                Log.d(TAG, "Add a new task")
-
-                val taskEditText = EditText(this)
-                val dialog = AlertDialog.Builder(this)
-                        .setTitle("Add a new task")
-                        .setMessage("What do you want to do next?")
-                        .setView(taskEditText)
-                        .setPositiveButton("Add") {
-                            dialog, which ->
-                            val task = taskEditText.text.toString()
-
-                            val db: SQLiteDatabase = mHelper.writableDatabase
-
-                            val cls : Int = 0
-                            val date : String = getDateTime(Date())
-
-                            val values = ContentValues()
-                            values.put(TITLE,task)
-                            values.put(CLOSED,cls)
-                            values.put(EXPIRES_AT,date)
-
-                            db.insertWithOnConflict(TABLE,
-                                    null,
-                                    values,
-                                    SQLiteDatabase.CONFLICT_REPLACE)
-                            db.close()
-                            updateUI()
-                        }
-                        .setNegativeButton("Cancel",null)
-                        .create()
-                dialog.show()
+                val intent = Intent(this,CreateTaskActivity::class.java)
+                startActivity(intent)
                 return true
+
             }
             R.id.action_archive -> {
                 val intent = Intent(this,ArchiveActivity::class.java)
@@ -163,8 +127,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun deleteDoneTask(task: String) {
+        val db = mHelper.writableDatabase
+
+        val cursor = db.query(TABLE,arrayOf(ID,TITLE,EXPIRES_AT),
+                "title = " + "'" + task + "'",null,null,null,null)
+        cursor.moveToFirst()
+        val idx = cursor.getColumnIndex(ID)
+        val id = cursor.getInt(idx)
+        val date = getDateTime(Date())
+
+        val cv = ContentValues()
+        cv.put(TITLE,task)
+        cv.put(CLOSED,1)
+        cv.put(EXPIRES_AT,date)
+
+        db.update(TABLE,cv, ID + " = "+id,null)
+        db.close()
+    }
+
+    private fun deleteExpiredTasks() {
+        val db = mHelper.readableDatabase
+        val cursor = db.query(TABLE,
+                null,null,null,null,null,null)
+
+        while (cursor.moveToNext()) {
+            val e_idx = cursor.getColumnIndex(EXPIRES_AT)
+            val c_idx = cursor.getColumnIndex(CLOSED)
+            val cls = cursor.getInt(c_idx)!=0
+
+            if (!cls) {
+                val now: Date = Date()
+                val expire: Date = getDateTime_fromString(cursor.getString(e_idx))
+
+                //Log.d(TAG, now.toString() + " :: " + expire.toString())
+                if (expire.before(now)) {
+                    val t_idx = cursor.getColumnIndex(TITLE)
+                    val i_idx=cursor.getColumnIndex(ID)
+
+                    val cv = ContentValues()
+                    cv.put(TITLE, cursor.getString(t_idx))
+                    cv.put(CLOSED, 1)
+                    cv.put(EXPIRES_AT, getDateTime(now))
+                    cv.put(EXPIRED,1)
+
+                    db.update(TABLE,cv, ID + " = "+cursor.getInt(i_idx),null)
+
+                }
+            }
+        }
+        db.close()
+    }
+
     private fun getDateTime(date: Date): String {
         val dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         return dateFormat.format(date)
+    }
+
+    private fun getDateTime_fromString(s_date: String): Date {
+        val dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        return dateFormat.parse(s_date)
     }
 }

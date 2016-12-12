@@ -29,4 +29,11 @@
         android:layout_alignParentRight="true"
         android:text="Delete"
         android:onClick="deleteTask"/>
+    <TextView
+        android:id="@+id/task_expired"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/task_close_time"/>
 </RelativeLayout>

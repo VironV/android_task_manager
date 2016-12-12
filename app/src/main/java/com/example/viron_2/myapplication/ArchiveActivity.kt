@@ -30,6 +30,7 @@ class ArchiveActivity : AppCompatActivity() {
     val TITLE: String = TaskContract.TaskBase.TITLE
     val EXPIRES_AT: String = TaskContract.TaskBase.EXPIRES_AT
     val CLOSED: String = TaskContract.TaskBase.CLOSED
+    val EXPIRED: String = TaskContract.TaskBase.EXPIRED
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +50,7 @@ class ArchiveActivity : AppCompatActivity() {
 
         val db = mHelper.readableDatabase
         val cursor = db.query(TABLE,
-                arrayOf(ID,TITLE, CLOSED, EXPIRES_AT),null,null,null,null,null)
+                null,null,null,null,null,null)
         while (cursor.moveToNext()) {
             val c_idx = cursor.getColumnIndex(CLOSED)
             val cls = cursor.getInt(c_idx)!=0
@@ -57,10 +58,17 @@ class ArchiveActivity : AppCompatActivity() {
             if (cls) {
                 val t_idx = cursor.getColumnIndex(TITLE)
                 val d_idx = cursor.getColumnIndex(EXPIRES_AT)
+                val ex_idx = cursor.getColumnIndex(EXPIRED)
 
                 val m = HashMap<String,String>()
                 m.put(TITLE,cursor.getString(t_idx))
                 m.put(EXPIRES_AT,"Close date: " + cursor.getString(d_idx))
+                val exp = cursor.getInt(ex_idx)!=0
+                if (exp) {
+                    m.put(EXPIRED, "EXPIRED")
+                } else {
+                    m.put(EXPIRED, "DONE")
+                }
 
                 data.add(m)
             }
@@ -69,8 +77,8 @@ class ArchiveActivity : AppCompatActivity() {
         mAdapter= SimpleAdapter(this,
                 data,
                 R.layout.old_item_task,
-                arrayOf(TITLE,EXPIRES_AT),
-                intArrayOf(R.id.old_task_title,R.id.task_close_time))
+                arrayOf(TITLE,EXPIRES_AT,EXPIRED),
+                intArrayOf(R.id.old_task_title,R.id.task_close_time,R.id.task_expired))
         mTaskListView?.adapter=mAdapter
 
         cursor.close()

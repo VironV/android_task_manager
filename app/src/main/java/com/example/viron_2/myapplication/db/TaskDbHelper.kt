@@ -21,6 +21,7 @@ class TaskDbHelper(context: Context) : SQLiteOpenHelper(
         val TITLE: String = TaskBase.TITLE
         val EXPIRES_AT: String = TaskBase.EXPIRES_AT
         val CLOSED: String = TaskBase.CLOSED
+        val EXPIRED: String = TaskBase.EXPIRED
     }
 
     val DATABASE_CREATE=
@@ -28,7 +29,8 @@ class TaskDbHelper(context: Context) : SQLiteOpenHelper(
         "${ID} integer PRIMARY KEY autoincrement, " +
         "${TITLE} TEXT NOT NULL UNIQUE, "+
         "${EXPIRES_AT} DATETIME NOT NULL, "+
-        "${CLOSED} integer" +
+        "${CLOSED} integer," +
+        "${EXPIRED} integer DEFAULT 0" +
         ");"
 
     /*
