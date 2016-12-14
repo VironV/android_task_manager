@@ -17,6 +17,7 @@ import java.util.*
 class CreateTaskActivity : AppCompatActivity() {
 
     private var mHelper: TaskDbHelper = TaskDbHelper(this)
+    private var start_title: String? = null
 
     val TABLE: String = TaskContract.TaskBase.TABLE
     val ID: String = "_id"
@@ -27,6 +28,12 @@ class CreateTaskActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_task)
+
+        start_title=intent.extras.getString("TITLE")
+        val t_view=task_title_edit
+        if (start_title!=null) {
+            t_view.setText(start_title)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -15,8 +15,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NoteActivity" />
-        <activity android:name=".NewTaskActivity" />
         <activity android:name=".ArchiveActivity" />
         <activity android:name=".CreateTaskActivity"></activity>
     </application>

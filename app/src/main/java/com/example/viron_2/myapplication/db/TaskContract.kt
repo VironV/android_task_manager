@@ -7,7 +7,7 @@ import java.util.*
 class TaskContract {
     companion object  {
         val DB_NAME: String = "myapp.db"
-        val DB_VERSION: Int = 9
+        val DB_VERSION: Int = 11
     }
 
     public class TaskBase : BaseColumns {

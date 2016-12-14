@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         deleteExpiredTasks()
         super.onResume()
+        updateUI()
     }
 
     fun closeTask(view: View) {
@@ -114,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_add_task -> {
                 val intent = Intent(this,CreateTaskActivity::class.java)
+                intent.putExtra("TITLE","")
                 startActivity(intent)
                 return true
 
@@ -151,6 +153,8 @@ class MainActivity : AppCompatActivity() {
         val cursor = db.query(TABLE,
                 null,null,null,null,null,null)
 
+        var count: Int = 0
+
         while (cursor.moveToNext()) {
             val e_idx = cursor.getColumnIndex(EXPIRES_AT)
             val c_idx = cursor.getColumnIndex(CLOSED)
@@ -162,6 +166,7 @@ class MainActivity : AppCompatActivity() {
 
                 //Log.d(TAG, now.toString() + " :: " + expire.toString())
                 if (expire.before(now)) {
+                    count++
                     val t_idx = cursor.getColumnIndex(TITLE)
                     val i_idx=cursor.getColumnIndex(ID)
 
@@ -176,7 +181,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        if (count>0) {
+            createExpirationDialog(count)
+        }
         db.close()
+    }
+
+    private fun createExpirationDialog(tasks_count: Int) {
+        val dialog = AlertDialog.Builder(this)
+                .setTitle(tasks_count.toString() + " task/tasks expired. \nYou can find them in archive.")
+                .setPositiveButton("Ok",null)
+                .create()
+        dialog.show()
     }
 
     private fun getDateTime(date: Date): String {

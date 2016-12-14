@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/old_task_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_vertical"
     android:descendantFocusability="blocksDescendants">
 
     <TextView
+        android:id="@+id/task_expired"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"/>
+    <TextView
         android:id="@+id/old_task_title"
+        android:layout_below="@+id/task_expired"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/task_delete"
-        android:textSize="20sp" />s
+        android:textSize="20sp" />
     <TextView
         android:id="@+id/task_close_time"
         android:layout_width="wrap_content"
@@ -27,13 +35,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:text="Delete"
+        android:text="Recreate/\nDelete"
         android:onClick="deleteTask"/>
-    <TextView
-        android:id="@+id/task_expired"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/task_close_time"/>
 </RelativeLayout>
